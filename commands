@@ -1,0 +1,53 @@
+step1 :
+
+
+to run a script in mysql 
+mysql test < salaries.sql
+
+Import the table into hdfs 
+sqoop import --connect jdbc:mysql://sandbox/test?user=root --table salaries
+
+##specify columns , number of mappers and targert directory 
+
+ sqoop import --connect jdbc:mysql://sandbox/test?user=root --table salaries --columns salary,age -m 1 --target-dir salaries2
+
+
+## using query
+
+The Sqoop command will look similar to the ones you have been using throughout this lab, except you will use --query instead of --table. Recall that when you use a --query command you must also define a --split-by column, or define -m to be 1.
+
+sqoop import --connect jdbc:mysql://sandbox/test?user=root --query "select * from salaries where salary between 10000 and 50000 and \$CONDITIONS"  --split-by gender -m 2 --target-dir salaries3
+
+
+##EXPORT DATA FROM HDFS INTO A TABLE 
+
+sqoop export --connect jdbc:mysql://sandbox/test?user=root --table salaries2 --export-dir salary_data --input-fields-terminated-by ","
+
+
+
+---Pig 
+
+count the number of records in the file 
+
+stepA = load the file 
+stepb = GROUP A all ;
+stepc = FOREACH stepb generate COUNT(stepa);
+visits = load '/user/root/whitehouse/' USING PigStorage (',') ;
+first_ten = FOREACH visits generate $0..$9 ;
+p1 = FOREACH visits generate $19..$25 ;
+visitors = FOREACH x GENERATE  
+(chararray) $0 as lname :chararray,
+(chararray) $1 as fname :chararray,
+(chararray) $6 as arrival:chararray,
+(chararray) $19 as visitee:chararray ;
+
+con = FILTER visits by $25 (is not null);
+c= FOREACH visits generate $25 ;
+smpl= SAMPLE c 0.01 ;
+
+split visits into congress IF ($25 MATCHES '.*CONGRESS.*'),non_congress IF(not($25 MATCHES '.*CONGRESS.*')) ;
+
+
+
+
+
