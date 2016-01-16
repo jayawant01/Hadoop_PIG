@@ -1,0 +1,25 @@
+REGISTER datafu-1.2.0.jar ;
+DEFINE Quantile datafu.pig.stats.Quantile ('0.0','0.25','0.50','0.75','1.0') ;
+DEFINE Median datafu.pig.stats.Median () ;
+
+stocks = load '/user/root/stocks.csv' using PigStorage (',') as (
+nyse : chararray ,
+symbol :chararray ,
+closingdate : chararray,
+openprice :double,
+highprice :double,
+lowprice :double 
+);
+
+-- to use quantile make sure that the relation does not have null values 
+
+stocks_filter = FILTER stocks by highprice is not null ;
+
+stocks_filter_group = GROUP  stocks_filter by symbol ;
+
+stock_quantile = FOREACH stocks_filter_group {
+ ordered =  ORDER stocks_filter by highprice;
+generate  group as symbol , Quantile(ordered.highprice) as quant ,Median(ordered.highprice);
+}
+dump stock_quantile ;
+

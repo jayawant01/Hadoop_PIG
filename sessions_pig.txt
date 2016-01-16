@@ -1,0 +1,39 @@
+REGISTER /root/devph/labs/Lab6.4/datafu-1.2.0.jar;
+DEFINE Sessionize  datafu.pig.sessions.Sessionize ('8m') ;
+REGISTER /usr/hdp/2.2.0.0-2041/pig/piggybank.jar;
+DEFINE Median  datafu.pig.stats.Median();
+
+DEFINE UnixToISO org.apache.pig.piggybank.evaluation.datetime.convert.UnixToISO();
+
+clicks = LOAD 'clicks.csv' USING PigStorage(',') AS (id:int, time:long, url:chararray);
+
+clicks_iso = FOREACH clicks GENERATE UnixToISO(time) AS isotime, time, id;
+
+clicks_group = GROUP clicks_iso BY id;
+
+clicks_sessionized = FOREACH clicks_group {
+sorted = ORDER clicks_iso by isotime ;
+GENERATE  FLATTEN(Sessionize(sorted)) as  (isotime, time ,id,sessionid) ;
+} 
+
+--dump clicks_sessionized ;
+sessions = FOREACH clicks_sessionized generate time , sessionid ;
+sessions_group = GROUP  sessions by sessionid ;
+
+
+sessionlength = FOREACH sessions_group generate group as sessionid ,
+ MAX(sessions.time) - MIN (sessions.time) /1000.0 /60 as session_length ;
+--dump sessionlength ;
+
+sessionlength_grp = GROUP sessionlength all ;
+--session_avg = FOREACH sessionlength_grp generate 
+--AVG(sessionlength.session_length) ;
+
+-- modify session_avg to include Median 
+session_stats =FOREACH sessionlength_grp {
+ sort = ORDER  sessionlength by session_length ;
+ generate AVG (sort.session_length) as avg  ,Median( sort.session_length) ;
+}
+
+dump session_stats ;
+

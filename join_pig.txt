@@ -1,0 +1,23 @@
+Ivisits = load '/user/root/whitehouse/whitehouse_visits.txt' using PigStorage (',') as (lname:chararray, fname: chararray); 
+
+congress = load '/user/root/whitehouse/congress.txt' as (
+full_title : chararray ,
+district : chararray ,
+tittle : chararray ,
+fname : chararray,
+lname : chararray,
+party : chararray
+) ;
+
+congress_up = FOREACH  congress generate district , UPPER(lname ) as lname , UPPER(fname) as fname , party ;
+
+join_con_vst = JOIN visits by(fname,lname) ,congress_up by (fname,lname) ;
+
+--store join_con_vst into 'joinresult';
+
+group_party = GROUP join_con_vst BY congress_up::party ;
+cnt_vst = FOREACH group_party generate group , COUNT (join_con_vst) ;
+--dump cnt_vst ;
+explain cnt_vst ;
+
+
