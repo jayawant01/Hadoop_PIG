@@ -1,0 +1,28 @@
+input_ytube = load 'Youtube/' ;
+
+
+grp_cat = GROUP input_ytube by $3 ;
+
+grp_cnt = FOREACH grp_cat generate group as  category , COUNT (input_ytube) as cnt  ;
+
+ord_cat = ORDER  grp_cnt  by cnt desc ;
+
+top_five = LIMIT ord_cat 5 ;
+
+
+
+num_rate = foreach input_ytube generate  (chararray) $0 as videoid : chararray , (int) $7 as num_rating :int , (float) $6 as rating :float ;
+
+order_rate = ORDER num_rate by num_rating desc ;
+
+top_ten_rate = LIMIT  order_rate 10 ;
+
+top_ten = ORDER top_ten_rate by rating desc ;
+
+
+### videos which are viewed most 
+
+videos = foreach input_ytube generate (chararray) $0 as videoid : chararray , (int) $5 as views :int ;
+
+top_videos = ORDER videos by views desc ;
+

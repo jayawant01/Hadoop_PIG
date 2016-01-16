@@ -1,0 +1,58 @@
+## Problem Stataement 
+### A) List of airports operating in India 
+
+
+input_file = load  'airlines/hi/airports_mod.dat' using PigStorage (',') ;
+
+ind_air = FILTER  input_file by $3 =='India';
+
+list_airport = FOREACH ind_air generate 
+
+ (chararray) $0  as  airport_id : chararray,
+(chararray) $1  as  airport_name : chararray,
+(chararray) $2  as  city  : chararray ;
+
+### B) list of airlines having zero stops 
+
+routes = load  'airlines/hi/routes.dat' using PigStorage (',') ;
+airlines = load  'airlines/hi/Final_airlines' using PigStorage (',') ;
+
+zerostop = FILTER routes by $7 == 0;
+
+
+routes_new = FOREACH zerostops generate  (chararray)  $0 as airline : chararray , (int)  $1 as airline_id : int ;
+
+airlines_new = FOREACH airlines generate (int) $0 as airline_id : int , (chararray) $1 as airline_name  ;
+
+join_air_route = JOIN routes_new by (airline_id) , airlines_new by (airline_id) ;
+
+list_airlines_zero = FOREACH join_air_route generate airlines_new::airline_id , airlines_new::airline_name , routes_new::airline ;
+
+### C) List of airlines operating with code share 
+
+codeshare = FILTER routes  by $6 =='Y"
+
+routes_code = FOREACH codeshare generate  (chararray)  $0 as airline : chararray , (int)  $1 as airline_id : int ;
+
+
+
+join_air_route_share = JOIN routes_code by (airline_id) , airlines_new by (airline_id) ;
+
+list_airlines_zero = FOREACH join_air_route_share generate airlines_new::airline_id , airlines_new::airline_name , routes_code::airline ;
+
+### D) Countries having highest airports
+input_file = load  'airlines/hi/airports_mod.dat' using PigStorage (',') ;
+
+grp = GROUP input_file by $3 ;
+cnt_high_arpt = FOREACH grp generate group as country , COUNT(input_file) as count_airport ;
+highest_arpt = ORDER cnt_high_arpt  by count_airport desc ;
+
+### Active airlines 
+
+us_airlines = FILTER airlines by $6 =='United States' and SIZE($3) ==2 and SIZE($4) ==3 and $7 =='Y' ;
+
+
+
+
+
+
